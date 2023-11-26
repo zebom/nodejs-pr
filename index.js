@@ -1,13 +1,28 @@
 const express = require('express')
 const studentRoutes= require('./routes/studentRoutes');
-const userRoutes = require('./routes/userRoutes')
+const userRoutes = require('./routes/userRoutes');
+const cors = require ('cors');
 
 
+// require('dotenv').config();
 require('dotenv').config();
 require('./helpers/init_mongodb');
 
 
 const app = express();
+// app.use(cors({
+//     origin:"http://localhost:3000",
+    
+// }))
+app.use(cors({
+  origin: 'http://localhost:3000',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  optionsSuccessStatus: 204,
+  allowedHeaders: 'Authorization,Content-Type',
+}));
+
+
 app.use(express.json());
 app.use(userRoutes);
 app.use(studentRoutes);
@@ -29,6 +44,6 @@ app.use((err,req,res,next)=>{
     })
 })
 
-app.listen(process.env.port || 4000, function(){
+app.listen(process.env.PORT || 4000, function(){
     console.log('Now listening for request on: http://localhost:4000' );
 });

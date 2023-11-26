@@ -1,34 +1,66 @@
 const { default: mongoose } = require('mongoose');
 const User = require('../models/user')
 const createError = require("http-errors");
+const authSchema = require('../auth/authSchema');
+const { signAccessToken, signRefreshToken, verifyRefreshTOKEN } = require('../helpers/jwtHelper');
 // const { authSchema}=require('../auth/authSchema');
 
 
 
 
 //add student
-
+ 
 
 module.exports= {
-    // AddUser: async(req,res, next)=>{
-    //     try{ 
-    //         const {email,password}=req.body
-            
-    //         const result = await authSchema.validateAsync(req.body);
-    //         const existingUser=await User.findOne({email:email });
-    //         if (existingUser){
-    //             throw createError.Conflict(`Email ${email}already exists`)
-    //         }
+    PostRregister: async(req,res, next)=>{
+        try{
+            const result = await authSchema.validateAsync(req.body); 
+            const exist =await User.findOne({email:result.email});
+            if (exist){
+                throw createError.Conflict(`Email ${result.email} already exists`)
+            }
+            const user= new User(result);
+            const savedUser=await user.save()
+            const accesstoken = await signAccessToken(savedUser.id)
+            res.send({accesstoken});
+        }catch (error){
+            if(error.isJoi === true) {
+                error.status = 422;
+            }
+            next(error);
+    }
+     },
+    PostLogin: async (req, res, next)=>{
+        try{
+            const result = await authSchema.validateAsync(req.body);
+            const user = await User.findOne({email: result.email});
+            if(!user) throw createError.NotFound('user not registered');
 
-    //         const user= new User(result);
+            const isMatch = await user.isValidPassword(result.password);
+            if(!isMatch) throw createError.Unauthorized('username/password is not valid')
 
-    //         const savedUser=await user.save()
-
-    //         res.send(savedUser);
-    // }catch (error){
-    //     console.log(error)
-    // }
-    // }
+            const accessToken = await signAccessToken(user.id);
+            const refreshToken = await signRefreshToken(user.id);
+            // res.send(result);
+            res.send({accessToken, refreshToken });
+        }catch(error){
+            if(error.isJoi === true) return next(createError.BadRequest('invalid username/password'))
+            next(error)
+        }
+    },
+     PostRefreshToken: async(req,res, next)=>{
+         try{
+             const {refreshToken}= req.body;
+             if(!refreshToken)throw createError.BadRequest();
+             const userId = await verifyRefreshTOKEN(refreshToken);
+    
+             const accessToken = await signAccessToken(userId);
+             const refToken = await signRefreshToken(userId);
+             res.send({accessToken:accessToken, refreshToken:refToken});
+         }catch(error){
+             next(error);
+         }
+    },
     GetUser: async(req,res, next)=>{
        const id = req.params.id;
        try{ 
@@ -44,8 +76,7 @@ module.exports= {
         }
         next(error)
     }
-},
-   
+}, 
     UpdateUser:async(req,res, next)=>{
         try{
             const id = req.params.id;

@@ -1,6 +1,5 @@
  const JWT = require ('jsonwebtoken');
  const createError = require('http-errors');
-//  const User = require('../models/user');
 
  module.exports  = {
      signAccessToken:(UserId)=>{
@@ -8,7 +7,7 @@
             const payload = {}
             const secret = process.env.ACCESS_TOKEN_SECRET;
             const options = {
-                expiresIn: '1hr',
+                expiresIn: '1m',
                 issuer: 'EddTechnologies.com',
                 audience:UserId,
             }
@@ -38,11 +37,11 @@ verifyAccessToken:(req, res, next)=>{
 signRefreshToken: (UserId)=>{
     return new Promise((resolve, reject)=>{
         const payload = {}
-        const secret = Process.env.REFRESH_TOKEN_SECRET;
+        const secret = process.env.REFRESH_TOKEN_SECRET;
         const options ={
-            expiresIn:'ly',
+            expiresIn:'1y',
             issuer:'EddTechnologies.com',
-            audiencr: UserId,
+            audience: UserId,
         }
         JWT.sign(payload, secret, options, (error,token)=>{
             if(error) reject(error);
@@ -59,5 +58,7 @@ verifyRefreshTOKEN:(refreshToken)=>{
             resolve(userId);
         });
     });
-}
+},
+
+
 }

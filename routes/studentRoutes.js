@@ -2,13 +2,13 @@ const express = require('express');
 const routes = express.Router();
 const Student =require("../models/studentModel")
 const studentController = require('../controllers/studentController');
-const { verifyAccessToken } = require('../helpers/jwtHelper');
+// const { verifyAccessToken} = require('../helpers/jwtHelper');
 
 
 // Get a list of students from the database
 routes.get('/students/:id',studentController.getStudent);
 
-routes.get('/students',verifyAccessToken,studentController.getAllStudent);
+routes.get('/students',studentController.getAllStudent);
 
 // Add a student to the DB
 routes.post('/students',studentController.Addstudent);
